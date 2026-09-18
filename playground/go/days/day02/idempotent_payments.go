@@ -2,9 +2,17 @@ package day02
 
 // Day 2 -- API Guarantees: Idempotency.
 //
-// The SAME idempotency key must never be charged twice: a repeat of a key
-// you've already seen must return the result of the FIRST charge -- same
-// amount, unchanged running total -- not charge again.
+// Every charge request comes with a key. The same key must never be
+// charged twice.
+//
+// Charge(key, amount):
+//   - If this key was never seen before: charge it. Add amount to the
+//     total and return ChargeResult{amount, runningTotal, WasNew: true}.
+//   - If this key was already charged: do NOT charge again. Return the
+//     amount of the FIRST charge and the current running total, with
+//     WasNew=false. TotalCharged() must stay the same.
+//
+// TotalCharged() returns the sum of all real (first-time) charges.
 
 type ChargeResult struct {
 	Amount       int64
@@ -13,19 +21,16 @@ type ChargeResult struct {
 }
 
 type PaymentProcessor struct {
-	seen  map[string]int64
-	total int64
+	// TODO: choose your own representation.
 }
 
 func NewPaymentProcessor() *PaymentProcessor {
-	return &PaymentProcessor{seen: make(map[string]int64)}
+	// TODO
+	return &PaymentProcessor{}
 }
 
-// TODO: if key was already charged, return the ORIGINAL amount and the
-// CURRENT running total, with WasNew=false -- and don't change
-// TotalCharged(). Otherwise remember it, add it to the total, and return
-// it with WasNew=true.
 func (p *PaymentProcessor) Charge(key string, amount int64) ChargeResult {
+	// TODO
 	return ChargeResult{}
 }
 

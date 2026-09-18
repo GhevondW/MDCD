@@ -2,21 +2,28 @@ package day02
 
 // Day 2 -- Challenge: Idempotency with Expiry & Conflict.
 //
-// A payment processor whose idempotency keys EXPIRE. Time is a logical
-// clock: every call takes `now` (non-decreasing across calls); a key
-// recorded at time T with time-to-live `ttl` is expired once now >= T + ttl.
+// Like the idempotent payment processor, but keys are only remembered for
+// a limited time. There is no real clock: every call receives the current
+// time `now` as a plain number, and the numbers never go down from call
+// to call. A key recorded at time T is remembered until time T + ttl;
+// from now == T + ttl on, it is expired (forgotten).
 //
-// Charge(key, amount, now):
-//   - key unknown, or its record expired  -> charge: add amount to the
-//     total, record (key, amount) with expiry now + ttl, return StatusNew.
-//   - key active, same amount             -> return StatusReplay with the
-//     originally recorded amount and the current total. Nothing changes --
-//     not the total, not the recorded amount, not the expiry.
-//   - key active, different amount        -> return StatusConflict with
-//     the recorded amount and the current total. Nothing changes.
+// Charge(key, amount, now) -- three cases:
+//   - The key is unknown, or its record has expired: this is a NEW
+//     charge (StatusNew). Add amount to the total and remember
+//     (key, amount) until now + ttl.
+//   - The key is still remembered and amount equals the recorded amount:
+//     this is a REPLAY (StatusReplay) -- the caller sent the same request
+//     twice. Return the recorded amount and the current total. Change
+//     NOTHING: not the total, not the recorded amount, not the expiry
+//     time.
+//   - The key is still remembered but amount is different: this is a
+//     CONFLICT (StatusConflict) -- the same key was used for a different
+//     request, a mistake. Return the recorded amount and the current
+//     total. Change nothing.
 //
-// TotalCharged()   sum of all charges that returned StatusNew.
-// ActiveKeys(now)  number of recorded keys not yet expired at now.
+// TotalCharged()   sum of all NEW charges.
+// ActiveKeys(now)  how many recorded keys are not yet expired at now.
 
 type ChargeStatus int
 
@@ -33,12 +40,12 @@ type ChargeOutcome struct {
 }
 
 type ExpiringPaymentProcessor struct {
-	ttl int64
 	// TODO: choose your own representation.
 }
 
 func NewExpiringPaymentProcessor(ttl int64) *ExpiringPaymentProcessor {
-	return &ExpiringPaymentProcessor{ttl: ttl}
+	// TODO
+	return &ExpiringPaymentProcessor{}
 }
 
 func (p *ExpiringPaymentProcessor) Charge(key string, amount, now int64) ChargeOutcome {

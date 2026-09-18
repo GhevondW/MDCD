@@ -1,17 +1,23 @@
 """Day 2 -- Contracts & Invariants.
 
-Implement BoundedStack so it enforces its own contract:
-  - push(v): precondition "not full" -- if the stack IS full, raise
-    IndexError instead of silently corrupting state.
-  - pop() / top(): precondition "not empty" -- same idea.
-  - Invariant to hold at all times between calls: 0 <= size() <= capacity.
+A stack of ints with a fixed capacity, given once in the constructor.
+The stack must protect its own rules:
+
+  - push(v): only allowed when the stack is not full. If it is already
+    full, raise IndexError and do not change anything.
+  - pop(): only allowed when the stack is not empty. If it is empty,
+    raise IndexError. Otherwise remove and return the top value.
+  - top(): same rule as pop(), but the value stays on the stack.
+  - full(), empty(), size(): report the current state.
+
+At any moment between calls, 0 <= size() <= capacity must hold.
 """
 
 
 class BoundedStack:
     def __init__(self, capacity: int) -> None:
-        self._capacity = capacity
-        self._data: list[int] = []
+        # TODO: choose your own representation.
+        pass
 
     def full(self) -> bool:
         # TODO
@@ -26,14 +32,13 @@ class BoundedStack:
         return 0
 
     def push(self, value: int) -> None:
-        # TODO: raise IndexError("full") if full(), otherwise store value.
+        # TODO
         pass
 
     def pop(self) -> int:
-        # TODO: raise IndexError("empty") if empty(), otherwise remove and
-        # return the top value.
+        # TODO
         return 0
 
     def top(self) -> int:
-        # TODO: same precondition as pop(), but don't remove anything.
+        # TODO
         return 0

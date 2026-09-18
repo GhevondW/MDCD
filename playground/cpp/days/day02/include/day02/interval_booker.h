@@ -1,22 +1,27 @@
 #pragma once
 // Day 2 -- Challenge: Interval Booker
 //
-// A booking calendar over HALF-OPEN intervals [start, end): the invariant
-// is that no two recorded bookings ever overlap. [0,10) and [10,20) do
-// not overlap.
+// A booking calendar. A booking takes the time interval [start, end):
+// `start` is included, `end` is not. So [0,10) and [10,20) do NOT
+// overlap -- one ends exactly where the other starts.
 //
-//   book(start, end)          record the booking and return true iff it
-//                             overlaps no existing booking; otherwise
-//                             return false and change nothing.
-//                             Contract: start < end, else throw
+// The one rule that must always hold: no two recorded bookings overlap.
+//
+//   book(start, end)          if the interval overlaps no existing
+//                             booking, record it and return true.
+//                             Otherwise return false and change nothing.
+//                             start must be < end; if not, throw
 //                             std::invalid_argument.
-//   cancel(start, end)        remove a booking by EXACT match only.
-//   firstFree(from, duration) the smallest start >= from such that
+//   cancel(start, end)        remove a booking. Only an EXACT match
+//                             counts: the same start and the same end.
+//                             Returns whether a booking was removed.
+//   firstFree(from, duration) find the earliest time a booking of length
+//                             `duration` could start: the smallest
+//                             start >= from such that
 //                             [start, start + duration) overlaps no
-//                             existing booking.
-//                             Contract: duration > 0, else throw
-//                             std::invalid_argument.
-//   count()                   number of recorded bookings.
+//                             existing booking. duration must be > 0; if
+//                             not, throw std::invalid_argument.
+//   count()                   how many bookings are recorded.
 
 #include <cstddef>
 #include <stdexcept>

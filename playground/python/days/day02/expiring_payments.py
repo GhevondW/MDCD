@@ -1,20 +1,25 @@
 """Day 2 -- Challenge: Idempotency with Expiry & Conflict.
 
-A payment processor whose idempotency keys EXPIRE. Time is a logical
-clock: every call takes `now` (non-decreasing across calls); a key
-recorded at time T with time-to-live `ttl` is expired once now >= T + ttl.
+Like the idempotent payment processor, but keys are only remembered for
+a limited time. There is no real clock: every call receives the current
+time `now` as a plain number, and the numbers never go down from call
+to call. A key recorded at time T is remembered until time T + ttl;
+from now == T + ttl on, it is expired (forgotten).
 
-charge(key, amount, now):
-  - key unknown, or its record expired  -> charge: add `amount` to the
-    total, record (key, amount) with expiry now + ttl, return NEW.
-  - key active, same amount             -> return REPLAY with the
-    originally recorded amount and the current total. Nothing changes --
-    not the total, not the recorded amount, not the expiry.
-  - key active, different amount        -> return CONFLICT with the
-    recorded amount and the current total. Nothing changes.
+charge(key, amount, now) -- three cases:
+  - The key is unknown, or its record has expired: this is a NEW charge.
+    Add `amount` to the total and remember (key, amount) until now + ttl.
+  - The key is still remembered and `amount` equals the recorded amount:
+    this is a REPLAY (the caller sent the same request twice). Return
+    the recorded amount and the current total. Change NOTHING: not the
+    total, not the recorded amount, not the expiry time.
+  - The key is still remembered but `amount` is different: this is a
+    CONFLICT (the same key was used for a different request -- a
+    mistake). Return the recorded amount and the current total. Change
+    nothing.
 
-total_charged()   sum of all charges that returned NEW.
-active_keys(now)  number of recorded keys not yet expired at `now`.
+total_charged()   sum of all NEW charges.
+active_keys(now)  how many recorded keys are not yet expired at `now`.
 """
 
 import enum
@@ -36,8 +41,8 @@ class ChargeOutcome:
 
 class ExpiringPaymentProcessor:
     def __init__(self, ttl: int) -> None:
-        self._ttl = ttl
         # TODO: choose your own representation.
+        pass
 
     def charge(self, key: str, amount: int, now: int) -> ChargeOutcome:
         # TODO

@@ -2,10 +2,18 @@ package day02
 
 // Day 2 -- API Guarantees: Atomicity.
 //
-// A record has two fields, A and B. Set() must be all-or-nothing: if
-// a + b < 0 the update is invalid and must be REJECTED IN FULL -- neither
-// field may change, whether the key already existed or not. Applying one
-// field before validating the other is exactly the bug this catches.
+// A record has two fields, A and B. A record is valid only when
+// a + b >= 0.
+//
+// Set(key, a, b) must be all-or-nothing:
+//   - If a + b >= 0: store both fields together and return true.
+//   - If a + b < 0: the update is invalid. Reject the WHOLE update -- do
+//     not change either field -- and return false. This also holds when
+//     the key already has a record: the old record must stay exactly as
+//     it was.
+//
+// Get(key) returns the stored record and true, or the zero value and
+// false if this key was never successfully set.
 
 type Fields struct {
 	A int64
@@ -13,21 +21,20 @@ type Fields struct {
 }
 
 type RecordStore struct {
-	store map[string]Fields
+	// TODO: choose your own representation.
 }
 
 func NewRecordStore() *RecordStore {
-	return &RecordStore{store: make(map[string]Fields)}
+	// TODO
+	return &RecordStore{}
 }
 
-// TODO: if a + b >= 0, commit BOTH fields together and return true.
-// Otherwise leave the store completely unchanged and return false.
 func (r *RecordStore) Set(key string, a, b int64) bool {
+	// TODO
 	return false
 }
 
-// TODO: return the record and true if key has been successfully set, or
-// the zero value and false otherwise.
 func (r *RecordStore) Get(key string) (Fields, bool) {
+	// TODO
 	return Fields{}, false
 }

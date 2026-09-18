@@ -1,12 +1,19 @@
 #pragma once
 // Day 2 -- API Guarantees: Idempotency
 //
-// The SAME idempotency key must never be charged twice: a repeat of a key
-// you've already seen must return the result of the FIRST charge -- same
-// amount, unchanged running total -- not charge again.
+// Every charge request comes with a key. The same key must never be
+// charged twice.
+//
+// charge(key, amount):
+//   - If this key was never seen before: charge it. Add `amount` to the
+//     total and return {amount, runningTotal, wasNew=true}.
+//   - If this key was already charged: do NOT charge again. Return the
+//     amount of the FIRST charge and the current running total, with
+//     wasNew=false. totalCharged() must stay the same.
+//
+// totalCharged() returns the sum of all real (first-time) charges.
 
 #include <string>
-#include <unordered_map>
 
 class PaymentProcessor {
 public:
@@ -16,13 +23,10 @@ public:
         bool wasNew;
     };
 
-    // TODO: if `key` was already charged, return the ORIGINAL amount and
-    // the CURRENT running total, with wasNew=false -- and don't change
-    // totalCharged(). Otherwise remember it, add it to the total, and
-    // return it with wasNew=true.
     Result charge(const std::string& key, long long amount) {
         (void)key;
         (void)amount;
+        // TODO
         return Result{0, 0, false};
     }
 
@@ -32,6 +36,5 @@ public:
     }
 
 private:
-    std::unordered_map<std::string, long long> seen_;
-    long long total_ = 0;
+    // TODO: choose your own representation.
 };

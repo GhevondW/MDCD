@@ -2,6 +2,7 @@
 
 Implement the `TODO`s in `src/main/java/day02/`; don't change
 `src/test/`. Problems 1–3 are the core set; 4–6 are challenge problems.
+Each class's Javadoc starts with the full problem statement.
 
 Run just this day's tests from `playground/java`:
 ```
@@ -13,51 +14,48 @@ mvn -pl days/day02 test
 ### 1. Bounded Stack — Contracts & Invariants
 `src/main/java/day02/BoundedStack.java`
 
-`BoundedStack` must enforce its own contract instead of silently
-corrupting state:
-- `push(v)` — precondition: not full. If already full, throw
-  `IllegalStateException` instead of pushing.
-- `pop()` / `top()` — precondition: not empty. Throw
-  `NoSuchElementException` instead.
-- Invariant to hold between calls: `0 <= size() <= capacity`.
+A stack of ints with a fixed capacity. `push` on a full stack must throw
+`IllegalStateException`, `pop`/`top` on an empty stack must throw
+`NoSuchElementException` — instead of changing anything — and
+`0 <= size() <= capacity` must hold at all times.
 
 ### 2. Idempotent Payments — API Guarantees: Idempotency
 `src/main/java/day02/PaymentProcessor.java`
 
-The same idempotency key must never be charged twice. `charge()` on a
-repeat key must return the *original* charge's amount and the *current*
-running total (unchanged) with `wasNew = false` — not charge again.
+Every charge comes with a key, and the same key must never be charged
+twice. A repeated key returns the first charge's amount and the unchanged
+running total.
 
 ### 3. Atomic Record Update — API Guarantees: Atomicity
 `src/main/java/day02/RecordStore.java`
 
-A record has two fields, `a` and `b`. `set()` must be all-or-nothing: if
-`a + b < 0`, the update is rejected *in full* — neither field may change,
-whether the key already existed or not.
+A record has two fields, `a` and `b`, and is valid only when `a + b >= 0`.
+An invalid update must be rejected as a whole: neither field may change,
+even if the key already has a record.
 
 ## Challenge
 
 ### 4. Transactional Key-Value Store — Atomicity
 `src/main/java/day02/TxnKV.java`
 
-A string key-value store with **nested** transactions: `begin()`,
-`commit()`, `rollback()`. `commit()` merges the innermost transaction's
-writes *and* deletes into its parent transaction (or into the store if it
-has no parent); `rollback()` discards them. Reads always see the innermost
-state. The full semantics are in the class Javadoc.
+A key-value store where a transaction can be opened inside another
+transaction. `commit()` moves the innermost transaction's writes and
+deletes one level out — not straight into the store; `rollback()` throws
+them away. The full semantics are in the class Javadoc.
 
 ### 5. Idempotency with Expiry & Conflict
 `src/main/java/day02/ExpiringPaymentProcessor.java`
 
-Idempotency keys that expire on a logical clock: within the TTL a repeat
-of a key is a *replay* (same amount) or a *conflict* (different amount) —
-neither charges; after the TTL the key is forgotten and the next charge is
-new. The full semantics are in the class Javadoc.
+Idempotency keys that are only remembered for a limited time, on a clock
+the caller passes in. While a key is remembered, the same amount is a
+*replay* and a different amount is a *conflict* — neither charges
+anything. When the time runs out, the key is forgotten. The full
+semantics are in the class Javadoc.
 
 ### 6. Interval Booker — Invariants
 `src/main/java/day02/IntervalBooker.java`
 
-A booking calendar over half-open intervals `[start, end)` whose invariant
-is that recorded bookings never overlap, plus `firstFree(from, duration)` —
-the earliest free slot of a given length at or after `from`. The full
+A booking calendar over half-open intervals `[start, end)`. Bookings must
+never overlap. Also implement `firstFree(from, duration)`: the earliest
+`start >= from` where a booking of the given length fits. The full
 semantics are in the class Javadoc.

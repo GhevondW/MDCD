@@ -1,19 +1,27 @@
 #pragma once
 // Day 2 -- Contracts & Invariants
 //
-// Implement BoundedStack so it enforces its own contract:
-//   - push(v): precondition "not full" -- if the stack IS full, throw
-//     std::runtime_error instead of silently corrupting state.
-//   - pop() / top(): precondition "not empty" -- same idea.
-//   - Invariant to hold at all times between calls: 0 <= size() <= capacity.
+// A stack of ints with a fixed capacity, given once in the constructor.
+// The stack must protect its own rules:
+//
+//   - push(v): only allowed when the stack is not full. If it is already
+//     full, throw std::runtime_error and do not change anything.
+//   - pop(): only allowed when the stack is not empty. If it is empty,
+//     throw std::runtime_error. Otherwise remove and return the top value.
+//   - top(): same rule as pop(), but the value stays on the stack.
+//   - full(), empty(), size(): report the current state.
+//
+// At any moment between calls, 0 <= size() <= capacity must hold.
 
 #include <cstddef>
 #include <stdexcept>
-#include <vector>
 
 class BoundedStack {
 public:
-    explicit BoundedStack(std::size_t capacity) : cap_(capacity) {}
+    explicit BoundedStack(std::size_t capacity) {
+        (void)capacity;
+        // TODO
+    }
 
     bool full() const {
         // TODO
@@ -32,21 +40,19 @@ public:
 
     void push(int v) {
         (void)v;
-        // TODO: throw std::runtime_error("full") if full(), otherwise store v.
+        // TODO
     }
 
     int pop() {
-        // TODO: throw std::runtime_error("empty") if empty(), otherwise
-        // remove and return the top value.
+        // TODO
         return 0;
     }
 
     int top() const {
-        // TODO: same precondition as pop(), but don't remove anything.
+        // TODO
         return 0;
     }
 
 private:
-    std::vector<int> data_;
-    std::size_t cap_;
+    // TODO: choose your own representation.
 };

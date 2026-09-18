@@ -1,14 +1,21 @@
 #pragma once
 // Day 2 -- API Guarantees: Atomicity
 //
-// A record has two fields, a and b. set() must be all-or-nothing: if
-// a + b < 0 the update is invalid and must be REJECTED IN FULL -- neither
-// field may change, whether the key already existed or not. Applying one
-// field before validating the other is exactly the bug this catches.
+// A record has two fields, a and b. A record is valid only when
+// a + b >= 0.
+//
+// set(key, a, b) must be all-or-nothing:
+//   - If a + b >= 0: store both fields together and return true.
+//   - If a + b < 0: the update is invalid. Reject the WHOLE update -- do
+//     not change either field -- and return false. This also holds when
+//     the key already has a record: the old record must stay exactly as
+//     it was.
+//
+// get(key) returns the stored record, or std::nullopt if this key was
+// never successfully set.
 
 #include <optional>
 #include <string>
-#include <unordered_map>
 
 struct Record {
     long long a = 0;
@@ -17,22 +24,20 @@ struct Record {
 
 class RecordStore {
 public:
-    // TODO: if a + b >= 0, commit BOTH fields together and return true.
-    // Otherwise leave the store completely unchanged and return false.
     bool set(const std::string& key, long long a, long long b) {
         (void)key;
         (void)a;
         (void)b;
+        // TODO
         return false;
     }
 
-    // TODO: return the record if `key` has been successfully set, or
-    // std::nullopt otherwise.
     std::optional<Record> get(const std::string& key) const {
         (void)key;
+        // TODO
         return std::nullopt;
     }
 
 private:
-    std::unordered_map<std::string, Record> store_;
+    // TODO: choose your own representation.
 };

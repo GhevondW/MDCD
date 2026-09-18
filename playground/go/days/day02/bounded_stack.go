@@ -2,11 +2,17 @@ package day02
 
 // Day 2 -- Contracts & Invariants.
 //
-// Implement BoundedStack so it enforces its own contract:
-//   - Push(v): precondition "not full" -- if the stack IS full, return
-//     ErrFull instead of silently corrupting state.
-//   - Pop() / Top(): precondition "not empty" -- return ErrEmpty instead.
-//   - Invariant to hold at all times between calls: 0 <= Size() <= capacity.
+// A stack of ints with a fixed capacity, given once to NewBoundedStack.
+// The stack must protect its own rules:
+//
+//   - Push(v): only allowed when the stack is not full. If it is already
+//     full, return ErrFull and do not change anything.
+//   - Pop(): only allowed when the stack is not empty. If it is empty,
+//     return ErrEmpty. Otherwise remove and return the top value.
+//   - Top(): same rule as Pop(), but the value stays on the stack.
+//   - Full(), Empty(), Size(): report the current state.
+//
+// At any moment between calls, 0 <= Size() <= capacity must hold.
 
 import "errors"
 
@@ -14,12 +20,12 @@ var ErrFull = errors.New("full")
 var ErrEmpty = errors.New("empty")
 
 type BoundedStack struct {
-	data     []int
-	capacity int
+	// TODO: choose your own representation.
 }
 
 func NewBoundedStack(capacity int) *BoundedStack {
-	return &BoundedStack{capacity: capacity}
+	// TODO
+	return &BoundedStack{}
 }
 
 func (s *BoundedStack) Full() bool {
@@ -38,17 +44,16 @@ func (s *BoundedStack) Size() int {
 }
 
 func (s *BoundedStack) Push(v int) error {
-	// TODO: return ErrFull if Full(), otherwise store v and return nil.
+	// TODO
 	return nil
 }
 
 func (s *BoundedStack) Pop() (int, error) {
-	// TODO: return 0, ErrEmpty if Empty(), otherwise remove and return
-	// the top value with a nil error.
+	// TODO
 	return 0, nil
 }
 
 func (s *BoundedStack) Top() (int, error) {
-	// TODO: same precondition as Pop(), but don't remove anything.
+	// TODO
 	return 0, nil
 }

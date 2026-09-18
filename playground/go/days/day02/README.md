@@ -2,7 +2,7 @@
 
 Implement the `TODO`s in the `.go` files below; don't change the
 `_test.go` files. Problems 1–3 are the core set; 4–6 are challenge
-problems.
+problems. Each file's doc comment starts with the full problem statement.
 
 Run just this day's tests from `playground/go`:
 ```
@@ -14,50 +14,48 @@ go test ./days/day02/...
 ### 1. Bounded Stack — Contracts & Invariants
 `bounded_stack.go`
 
-`BoundedStack` must enforce its own contract instead of silently
-corrupting state:
-- `Push(v)` — precondition: not full. If already full, return `ErrFull`
-  instead of pushing.
-- `Pop()` / `Top()` — precondition: not empty. Return `ErrEmpty` instead.
-- Invariant to hold between calls: `0 <= Size() <= capacity`.
+A stack of ints with a fixed capacity. `Push` on a full stack must return
+`ErrFull`, `Pop`/`Top` on an empty stack must return `ErrEmpty` — instead
+of changing anything — and `0 <= Size() <= capacity` must hold at all
+times.
 
 ### 2. Idempotent Payments — API Guarantees: Idempotency
 `idempotent_payments.go`
 
-The same idempotency key must never be charged twice. `Charge()` on a
-repeat key must return the *original* charge's amount and the *current*
-running total (unchanged) with `WasNew = false` — not charge again.
+Every charge comes with a key, and the same key must never be charged
+twice. A repeated key returns the first charge's amount and the unchanged
+running total.
 
 ### 3. Atomic Record Update — API Guarantees: Atomicity
 `atomic_record.go`
 
-A record has two fields, `A` and `B`. `Set()` must be all-or-nothing: if
-`a + b < 0`, the update is rejected *in full* — neither field may change,
-whether the key already existed or not.
+A record has two fields, `A` and `B`, and is valid only when `a + b >= 0`.
+An invalid update must be rejected as a whole: neither field may change,
+even if the key already has a record.
 
 ## Challenge
 
 ### 4. Transactional Key-Value Store — Atomicity
 `txn_kv.go`
 
-A string key-value store with **nested** transactions: `Begin()`,
-`Commit()`, `Rollback()`. `Commit()` merges the innermost transaction's
-writes *and* deletes into its parent transaction (or into the store if it
-has no parent); `Rollback()` discards them. Reads always see the innermost
-state. The full semantics are in the file's doc comment.
+A key-value store where a transaction can be opened inside another
+transaction. `Commit()` moves the innermost transaction's writes and
+deletes one level out — not straight into the store; `Rollback()` throws
+them away. The full semantics are in the file's doc comment.
 
 ### 5. Idempotency with Expiry & Conflict
 `expiring_payments.go`
 
-Idempotency keys that expire on a logical clock: within the TTL a repeat
-of a key is a *replay* (same amount) or a *conflict* (different amount) —
-neither charges; after the TTL the key is forgotten and the next charge is
-new. The full semantics are in the file's doc comment.
+Idempotency keys that are only remembered for a limited time, on a clock
+the caller passes in. While a key is remembered, the same amount is a
+*replay* and a different amount is a *conflict* — neither charges
+anything. When the time runs out, the key is forgotten. The full
+semantics are in the file's doc comment.
 
 ### 6. Interval Booker — Invariants
 `interval_booker.go`
 
-A booking calendar over half-open intervals `[start, end)` whose invariant
-is that recorded bookings never overlap, plus `FirstFree(from, duration)` —
-the earliest free slot of a given length at or after `from`. The full
+A booking calendar over half-open intervals `[start, end)`. Bookings must
+never overlap. Also implement `FirstFree(from, duration)`: the earliest
+`start >= from` where a booking of the given length fits. The full
 semantics are in the file's doc comment.

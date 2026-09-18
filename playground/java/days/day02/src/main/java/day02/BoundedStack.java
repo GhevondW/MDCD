@@ -1,25 +1,25 @@
 package day02;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-
 /**
  * Day 2 -- Contracts & Invariants.
  *
- * Implement BoundedStack so it enforces its own contract:
- *   - push(v): precondition "not full" -- if the stack IS full, throw
- *     IllegalStateException instead of silently corrupting state.
- *   - pop() / top(): precondition "not empty" -- throw
- *     NoSuchElementException instead.
- *   - Invariant to hold at all times between calls: 0 <= size() <= capacity.
+ * A stack of ints with a fixed capacity, given once in the constructor.
+ * The stack must protect its own rules:
+ *   - push(v): only allowed when the stack is not full. If it is already
+ *     full, throw IllegalStateException and do not change anything.
+ *   - pop(): only allowed when the stack is not empty. If it is empty,
+ *     throw NoSuchElementException. Otherwise remove and return the top
+ *     value.
+ *   - top(): same rule as pop(), but the value stays on the stack.
+ *   - isFull(), isEmpty(), size(): report the current state.
+ *
+ * At any moment between calls, 0 <= size() <= capacity must hold.
  */
 public class BoundedStack {
-    private final List<Integer> data = new ArrayList<>();
-    private final int capacity;
+    // TODO: choose your own representation.
 
     public BoundedStack(int capacity) {
-        this.capacity = capacity;
+        // TODO
     }
 
     public boolean isFull() {
@@ -38,18 +38,16 @@ public class BoundedStack {
     }
 
     public void push(int value) {
-        // TODO: throw new IllegalStateException("full") if isFull(),
-        // otherwise store value.
+        // TODO
     }
 
     public int pop() {
-        // TODO: throw new NoSuchElementException("empty") if isEmpty(),
-        // otherwise remove and return the top value.
+        // TODO
         return 0;
     }
 
     public int top() {
-        // TODO: same precondition as pop(), but don't remove anything.
+        // TODO
         return 0;
     }
 }
