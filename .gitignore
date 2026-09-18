@@ -1,0 +1,20 @@
+# OS
+.DS_Store
+
+# Editors and language servers
+.vscode/
+.idea/
+.cache/
+
+# C++ (CMake)
+playground/cpp/build/
+
+# Python
+__pycache__/
+*.pyc
+
+# Java (Maven)
+playground/java/**/target/
+
+# Go
+playground/go/**/*.test
