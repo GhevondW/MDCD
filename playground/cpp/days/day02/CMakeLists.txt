@@ -1,0 +1,29 @@
+add_executable(day02_bounded_stack_test tests/bounded_stack_test.cpp)
+target_include_directories(day02_bounded_stack_test PRIVATE include)
+target_link_libraries(day02_bounded_stack_test PRIVATE gtest_main)
+gtest_discover_tests(day02_bounded_stack_test TEST_PREFIX "day02_")
+
+add_executable(day02_idempotent_payments_test tests/idempotent_payments_test.cpp)
+target_include_directories(day02_idempotent_payments_test PRIVATE include)
+target_link_libraries(day02_idempotent_payments_test PRIVATE gtest_main)
+gtest_discover_tests(day02_idempotent_payments_test TEST_PREFIX "day02_")
+
+add_executable(day02_atomic_record_test tests/atomic_record_test.cpp)
+target_include_directories(day02_atomic_record_test PRIVATE include)
+target_link_libraries(day02_atomic_record_test PRIVATE gtest_main)
+gtest_discover_tests(day02_atomic_record_test TEST_PREFIX "day02_")
+
+add_executable(day02_txn_kv_test tests/txn_kv_test.cpp)
+target_include_directories(day02_txn_kv_test PRIVATE include)
+target_link_libraries(day02_txn_kv_test PRIVATE gtest_main)
+gtest_discover_tests(day02_txn_kv_test TEST_PREFIX "day02_")
+
+add_executable(day02_expiring_payments_test tests/expiring_payments_test.cpp)
+target_include_directories(day02_expiring_payments_test PRIVATE include)
+target_link_libraries(day02_expiring_payments_test PRIVATE gtest_main)
+gtest_discover_tests(day02_expiring_payments_test TEST_PREFIX "day02_")
+
+add_executable(day02_interval_booker_test tests/interval_booker_test.cpp)
+target_include_directories(day02_interval_booker_test PRIVATE include)
+target_link_libraries(day02_interval_booker_test PRIVATE gtest_main)
+gtest_discover_tests(day02_interval_booker_test TEST_PREFIX "day02_")
