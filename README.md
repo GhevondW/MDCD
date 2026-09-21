@@ -3,6 +3,8 @@
 Study materials, references, and practice problems for the course, organized by lecture day.
 
 - `day-XX-materials.md` — books, articles, and links to go with that day's lecture
+- `slides/day-XX/` — the lecture slides (open the `.html` in a browser;
+  → / Space reveals each point)
 - `playground/` — hands-on tasks for each lecture, in C++, Python, Java,
   and Go (pick whichever you're using — see `playground/README.md`).
   Clone, build/run locally (Windows/macOS/Linux), and check your work; the
