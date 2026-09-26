@@ -21,3 +21,4 @@ enable_testing()
 include(GoogleTest)
 
 add_subdirectory(days/day02)
+add_subdirectory(days/day03)
