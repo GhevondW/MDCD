@@ -24,7 +24,8 @@
 //      subscriber added mid-publish is not called by it, and one removed
 //      mid-publish is still called by it.
 //   3. Callbacks may use the bus: a callback can call subscribe,
-//      unsubscribe, or publish on the same bus without deadlocking.
+//      unsubscribe, or publish on the same bus without deadlocking --
+//      like the slides' Welcomer, which subscribes from update().
 //   4. Never run a callback while holding your lock. A callback is
 //      someone else's code -- it may be slow, or wait for another thread
 //      that needs the bus. Other threads must be able to use the bus

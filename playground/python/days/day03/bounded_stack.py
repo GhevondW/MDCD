@@ -15,7 +15,23 @@ moment *inside* a method, as long as it is restored before the method
 returns. With two threads, another thread can arrive in exactly that
 moment. No thread may ever see or cause a half-done push or pop: no
 value lost, no value returned twice, no value made up.
+
+Even with every method locked, a caller who writes
+
+    if not s.empty():
+        v = s.top()
+        s.pop()
+
+has an API race: another thread can run between the calls. So the stack
+also offers calls that check and act as ONE step:
+
+  - try_push(v): if there is room, push v and return True. If the stack
+    is full, return False and change nothing. Never raises.
+  - try_pop(): if the stack is not empty, remove the top value and return
+    it. If it is empty, return None. Never raises.
 """
+
+from typing import Optional
 
 
 class BoundedStack:
@@ -46,3 +62,11 @@ class BoundedStack:
     def top(self) -> int:
         # TODO
         return 0
+
+    def try_push(self, value: int) -> bool:
+        # TODO
+        return False
+
+    def try_pop(self) -> Optional[int]:
+        # TODO
+        return None

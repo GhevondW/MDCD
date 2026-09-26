@@ -12,7 +12,8 @@
 //     long long s = booker.firstFree(from, d);   // check
 //     booker.book(s, s + d);                     // act
 //
-// That is check-then-act: another thread can take the slot in between.
+// That is check-then-act across two calls -- an API race: another
+// thread can take the slot in between, even if each call is locked.
 // This booker has operations that find and book as ONE step instead.
 //
 //   book(start, end)     if [start, end) overlaps no booking, record it

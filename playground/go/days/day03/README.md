@@ -40,17 +40,22 @@ The lecture's broken counter. `Next()` hands out 1, 2, 3, ... — never the
 same number twice and never skipping one, no matter how many goroutines
 call it at once.
 
-### 2. Bank Account — Check-then-act
+### 2. Bank Account — Check-then-act, two locks at once
 `account.go`
 
 `Withdraw` succeeds only if the balance covers it, so the balance never
 goes below zero. The check and the subtraction must happen as one step.
+`Transfer` moves money between two accounts and `Total` reads two
+balances, each as one step — so both lock two accounts at once, and two
+opposite transfers must never deadlock.
 
-### 3. Bounded Stack, shared — Invariants under concurrency
+### 3. Bounded Stack, shared — Invariants and API races
 `bounded_stack.go`
 
 Day 2's bounded stack with the same contract, now used by many goroutines
-at once. No value may be lost, returned twice, or made up.
+at once. No value may be lost, returned twice, or made up. It also gets
+`TryPush` and `TryPop`, which check and act in one call — the fix for
+the API race in `if !s.Empty() { s.Pop() }`.
 
 ## Challenge
 

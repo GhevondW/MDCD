@@ -17,6 +17,18 @@ package day03
 // returns. With two goroutines, another goroutine can arrive in exactly
 // that moment. No goroutine may ever see or cause a half-done push or
 // pop: no value lost, no value returned twice, no value made up.
+//
+// Even with every method locked, a caller who writes
+//
+//	if !s.Empty() { v, _ := s.Top(); s.Pop(); ... }
+//
+// has an API race: another goroutine can run between the calls. So the
+// stack also offers calls that check and act as ONE step:
+//
+//   - TryPush(v): if there is room, push v and return true. If the stack
+//     is full, return false and change nothing.
+//   - TryPop(): if the stack is not empty, remove the top value and
+//     return (value, true). If it is empty, return (0, false).
 
 import "errors"
 
@@ -60,4 +72,14 @@ func (s *BoundedStack) Pop() (int, error) {
 func (s *BoundedStack) Top() (int, error) {
 	// TODO
 	return 0, nil
+}
+
+func (s *BoundedStack) TryPush(v int) bool {
+	// TODO
+	return false
+}
+
+func (s *BoundedStack) TryPop() (int, bool) {
+	// TODO
+	return 0, false
 }

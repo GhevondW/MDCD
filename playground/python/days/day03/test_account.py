@@ -1,3 +1,4 @@
+import random
 import time
 import unittest
 
@@ -103,6 +104,111 @@ class AccountTest(TimeLimitedTestCase):
 
         self.assertFalse(saw_negative, "the balance was seen below zero")
         self.assertEqual(a.balance(), 4 * PER_THREAD * 3 - sum(withdrawn))
+
+
+    # ---- transfer and total: two accounts locked at once ----
+
+    def test_transfer_moves_money(self):
+        a, b = Account(100), Account(50)
+        self.assertTrue(a.transfer(b, 30))
+        self.assertEqual(a.balance(), 70)
+        self.assertEqual(b.balance(), 80)
+
+    def test_transfer_without_enough_money_changes_nothing(self):
+        a, b = Account(10), Account(0)
+        self.assertFalse(a.transfer(b, 11))
+        self.assertEqual(a.balance(), 10)
+        self.assertEqual(b.balance(), 0)
+
+    def test_transfer_rejects_bad_arguments(self):
+        a, b = Account(10), Account(0)
+        for amount in (0, -5):
+            with self.assertRaises(ValueError):
+                a.transfer(b, amount)
+        with self.assertRaises(ValueError, msg="a transfer to the same account"):
+            a.transfer(a, 1)
+        self.assertEqual(a.balance(), 10)
+        self.assertEqual(b.balance(), 0)
+
+    def test_total_adds_both_balances(self):
+        a, b = Account(100), Account(50)
+        self.assertEqual(Account.total(a, b), 150)
+        self.assertEqual(Account.total(b, a), 150)
+        with self.assertRaises(ValueError):
+            Account.total(a, a)
+
+    def test_opposite_transfers_do_not_deadlock(self):
+        # Half the threads move money from x to y, the other half from y to
+        # x -- the slides' "Two transfers, two locks".
+        x, y = Account(1000), Account(1000)
+
+        def move(t):
+            for _ in range(300):
+                if t % 2 == 0:
+                    x.transfer(y, 1)
+                else:
+                    y.transfer(x, 1)
+
+        with interleaved():
+            run_together(4, move, msg="opposite transfers never finished")
+
+        self.assertEqual(x.balance() + y.balance(), 2000,
+                         "money appeared or disappeared")
+        self.assertGreaterEqual(x.balance(), 0)
+        self.assertGreaterEqual(y.balance(), 0)
+
+    def test_total_never_sees_a_half_done_transfer(self):
+        # Transfers move money back and forth between x and y while a watcher
+        # keeps asking for the total. A transfer done as two steps (take from
+        # x, then give to y) shows the watcher money in flight.
+        movers = 4
+        x, y = Account(1000), Account(1000)
+        finished = [False] * movers
+        wrong_totals = []
+        give_up = time.monotonic() + RUN_TIMEOUT  # in case the movers hang
+
+        def move_or_watch(t):
+            if t == movers:  # the watcher
+                while not all(finished) and time.monotonic() < give_up:
+                    seen = Account.total(x, y)
+                    if seen != 2000:
+                        wrong_totals.append(seen)
+                return
+            for _ in range(300):
+                if t % 2 == 0:
+                    x.transfer(y, 7)
+                else:
+                    y.transfer(x, 7)
+            finished[t] = True
+
+        with interleaved():
+            run_together(movers + 1, move_or_watch)
+
+        self.assertEqual(wrong_totals, [], "total() saw money that was in flight")
+        self.assertEqual(Account.total(x, y), 2000)
+
+    def test_concurrent_transfers_among_many_accounts_keep_the_money(self):
+        # 8 threads move random amounts between random pairs of 6 accounts,
+        # in both directions. No deadlock, no money made or lost, no account
+        # below zero.
+        accounts = [Account(1000) for _ in range(6)]
+
+        def move_randomly(t):
+            rng = random.Random(99 + t)
+            for _ in range(300):
+                src = rng.randrange(len(accounts))
+                dst = rng.randrange(len(accounts) - 1)
+                if dst >= src:
+                    dst += 1  # any account but src
+                accounts[src].transfer(accounts[dst], 1 + rng.randrange(50))
+
+        with interleaved():
+            run_together(THREADS, move_randomly)
+
+        for a in accounts:
+            self.assertGreaterEqual(a.balance(), 0, "an account went below zero")
+        self.assertEqual(sum(a.balance() for a in accounts), 1000 * len(accounts),
+                         "money appeared or disappeared")
 
 
 if __name__ == "__main__":

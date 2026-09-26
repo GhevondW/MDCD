@@ -3,6 +3,7 @@ package day03;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -124,5 +125,131 @@ class AccountTest {
 
         assertFalse(sawNegative.get(), "the balance was seen below zero");
         assertEquals(4L * perThread * 3 - withdrawn.get(), a.balance());
+    }
+
+    // ---- transfer and total: two accounts locked at once ----
+
+    @Test
+    void transferMovesMoney() {
+        Account a = new Account(100);
+        Account b = new Account(50);
+        assertTrue(a.transfer(b, 30));
+        assertEquals(70, a.balance());
+        assertEquals(80, b.balance());
+    }
+
+    @Test
+    void transferWithoutEnoughMoneyChangesNothing() {
+        Account a = new Account(10);
+        Account b = new Account(0);
+        assertFalse(a.transfer(b, 11));
+        assertEquals(10, a.balance());
+        assertEquals(0, b.balance());
+    }
+
+    @Test
+    void transferRejectsBadArguments() {
+        Account a = new Account(10);
+        Account b = new Account(0);
+        assertThrows(IllegalArgumentException.class, () -> a.transfer(b, 0));
+        assertThrows(IllegalArgumentException.class, () -> a.transfer(b, -5));
+        assertThrows(IllegalArgumentException.class, () -> a.transfer(a, 1), "a transfer to the same account");
+        assertEquals(10, a.balance());
+        assertEquals(0, b.balance());
+    }
+
+    @Test
+    void totalAddsBothBalances() {
+        Account a = new Account(100);
+        Account b = new Account(50);
+        assertEquals(150, Account.total(a, b));
+        assertEquals(150, Account.total(b, a));
+        assertThrows(IllegalArgumentException.class, () -> Account.total(a, a));
+    }
+
+    @Test
+    void oppositeTransfersDoNotDeadlock() throws Exception {
+        // Half the threads move money from x to y, the other half from y to
+        // x -- the slides' "Two transfers, two locks", 80,000 times.
+        int threads = 4;
+        int perThread = 20000;
+        Account x = new Account(1000);
+        Account y = new Account(1000);
+        runTogether(threads, t -> {
+            for (int i = 0; i < perThread; i++) {
+                if (t % 2 == 0) {
+                    x.transfer(y, 1);
+                } else {
+                    y.transfer(x, 1);
+                }
+            }
+        });
+
+        assertEquals(2000, x.balance() + y.balance(), "money appeared or disappeared");
+        assertTrue(x.balance() >= 0 && y.balance() >= 0, "a balance went below zero");
+    }
+
+    @Test
+    void totalNeverSeesAHalfDoneTransfer() throws Exception {
+        // Transfers move money back and forth between x and y while a watcher
+        // keeps asking for the total. A transfer done as two steps (take from
+        // x, then give to y) shows the watcher money in flight.
+        int movers = 4;
+        int perThread = 20000;
+        Account x = new Account(1000);
+        Account y = new Account(1000);
+        AtomicInteger moversLeft = new AtomicInteger(movers);
+        AtomicLong wrongTotal = new AtomicLong(2000);
+        runTogether(movers + 1, t -> {
+            if (t == movers) {  // the watcher
+                while (moversLeft.get() > 0) {
+                    long seen = Account.total(x, y);
+                    if (seen != 2000) wrongTotal.set(seen);
+                }
+                return;
+            }
+            try {
+                for (int i = 0; i < perThread; i++) {
+                    if (t % 2 == 0) {
+                        x.transfer(y, 7);
+                    } else {
+                        y.transfer(x, 7);
+                    }
+                }
+            } finally {
+                moversLeft.decrementAndGet();
+            }
+        });
+
+        assertEquals(2000, wrongTotal.get(), "total() saw money that was in flight");
+        assertEquals(2000, Account.total(x, y));
+    }
+
+    @Test
+    void concurrentTransfersAmongManyAccountsKeepTheMoney() throws Exception {
+        // 8 threads move random amounts between random pairs of 6 accounts,
+        // in both directions. No deadlock, no money made or lost, no account
+        // below zero.
+        int accounts = 6;
+        int threads = 8;
+        int perThread = 20000;
+        Account[] accs = new Account[accounts];
+        for (int i = 0; i < accounts; i++) accs[i] = new Account(1000);
+        runTogether(threads, t -> {
+            Random rng = new Random(99 + t);
+            for (int i = 0; i < perThread; i++) {
+                int from = rng.nextInt(accounts);
+                int to = rng.nextInt(accounts - 1);
+                if (to >= from) to++;  // any account but `from`
+                accs[from].transfer(accs[to], 1 + rng.nextInt(50));
+            }
+        });
+
+        long sum = 0;
+        for (Account a : accs) {
+            assertTrue(a.balance() >= 0, "an account went below zero");
+            sum += a.balance();
+        }
+        assertEquals(1000L * accounts, sum, "money appeared or disappeared");
     }
 }

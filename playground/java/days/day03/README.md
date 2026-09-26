@@ -31,17 +31,22 @@ The lecture's broken counter. `next()` hands out 1, 2, 3, ... — never the
 same number twice and never skipping one, no matter how many threads call
 it at once.
 
-### 2. Bank Account — Check-then-act
+### 2. Bank Account — Check-then-act, two locks at once
 `src/main/java/day03/Account.java`
 
 `withdraw` succeeds only if the balance covers it, so the balance never
 goes below zero. The check and the subtraction must happen as one step.
+`transfer` moves money between two accounts and `total` reads two
+balances, each as one step — so both lock two accounts at once, and two
+opposite transfers must never deadlock.
 
-### 3. Bounded Stack, shared — Invariants under concurrency
+### 3. Bounded Stack, shared — Invariants and API races
 `src/main/java/day03/BoundedStack.java`
 
-Day 2's bounded stack with the same contract, now used by many threads at
-once. No value may be lost, returned twice, or made up.
+Day 2's bounded stack with the same contract, now used by many threads
+at once. No value may be lost, returned twice, or made up. It also gets
+`tryPush` and `tryPop`, which check and act in one call — the fix for
+the API race in `if (!s.isEmpty()) s.pop();`.
 
 ## Challenge
 

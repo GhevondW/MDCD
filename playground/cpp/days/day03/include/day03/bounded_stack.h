@@ -16,8 +16,21 @@
 // returns. With two threads, another thread can arrive in exactly that
 // moment. No thread may ever see or cause a half-done push or pop: no
 // value lost, no value returned twice, no value made up.
+//
+// Even with every method locked, a caller who writes
+//
+//     if (!s.empty()) { int v = s.top(); s.pop(); ... }
+//
+// has an API race: another thread can run between the calls. So the
+// stack also offers calls that check and act as ONE step:
+//
+//   - tryPush(v): if there is room, push v and return true. If the stack
+//     is full, return false and change nothing. Never throws.
+//   - tryPop(): if the stack is not empty, remove the top value and
+//     return it. If it is empty, return std::nullopt. Never throws.
 
 #include <cstddef>
+#include <optional>
 #include <stdexcept>
 
 class BoundedStack {
@@ -55,6 +68,17 @@ public:
     int top() const {
         // TODO
         return 0;
+    }
+
+    bool tryPush(int v) {
+        (void)v;
+        // TODO
+        return false;
+    }
+
+    std::optional<int> tryPop() {
+        // TODO
+        return std::nullopt;
     }
 
 private:

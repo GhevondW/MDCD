@@ -3,6 +3,9 @@
 #include <gtest/gtest.h>
 
 #include <atomic>
+#include <memory>
+#include <random>
+#include <vector>
 
 TEST(Account, StartsWithInitialBalance) {
     Account a(100);
@@ -99,4 +102,115 @@ TEST(Account, ConcurrentDepositsAndWithdrawalsBalanceOut) {
 
     EXPECT_FALSE(sawNegative);
     EXPECT_EQ(a.balance(), 4LL * kPerThread * 3 - withdrawn.load());
+}
+
+// ---- transfer and total: two accounts locked at once ----
+
+TEST(Account, TransferMovesMoney) {
+    Account a(100), b(50);
+    EXPECT_TRUE(a.transfer(b, 30));
+    EXPECT_EQ(a.balance(), 70);
+    EXPECT_EQ(b.balance(), 80);
+}
+
+TEST(Account, TransferWithoutEnoughMoneyChangesNothing) {
+    Account a(10), b(0);
+    EXPECT_FALSE(a.transfer(b, 11));
+    EXPECT_EQ(a.balance(), 10);
+    EXPECT_EQ(b.balance(), 0);
+}
+
+TEST(Account, TransferRejectsBadArguments) {
+    Account a(10), b(0);
+    EXPECT_THROW(a.transfer(b, 0), std::invalid_argument);
+    EXPECT_THROW(a.transfer(b, -5), std::invalid_argument);
+    EXPECT_THROW(a.transfer(a, 1), std::invalid_argument) << "a transfer to the same account";
+    EXPECT_EQ(a.balance(), 10);
+    EXPECT_EQ(b.balance(), 0);
+}
+
+TEST(Account, TotalAddsBothBalances) {
+    Account a(100), b(50);
+    EXPECT_EQ(Account::total(a, b), 150);
+    EXPECT_EQ(Account::total(b, a), 150);
+    EXPECT_THROW(Account::total(a, a), std::invalid_argument);
+}
+
+TEST(Account, OppositeTransfersDoNotDeadlock) {
+    // Half the threads move money from x to y, the other half from y to
+    // x -- the slides' "Two transfers, two locks", 80,000 times.
+    constexpr int kThreads = 4;
+    constexpr int kPerThread = 20000;
+    Account x(1000), y(1000);
+    runTogetherWithin(20, kThreads, [&](int t) {
+        for (int i = 0; i < kPerThread; ++i) {
+            if (t % 2 == 0) {
+                x.transfer(y, 1);
+            } else {
+                y.transfer(x, 1);
+            }
+        }
+    });
+
+    EXPECT_EQ(x.balance() + y.balance(), 2000) << "money appeared or disappeared";
+    EXPECT_GE(x.balance(), 0);
+    EXPECT_GE(y.balance(), 0);
+}
+
+TEST(Account, TotalNeverSeesAHalfDoneTransfer) {
+    // Transfers move money back and forth between x and y while a watcher
+    // keeps asking for the total. A transfer done as two steps (take
+    // from x, then give to y) shows the watcher money in flight.
+    constexpr int kMovers = 4;
+    constexpr int kPerThread = 20000;
+    Account x(1000), y(1000);
+    std::atomic<int> moversLeft{kMovers};
+    std::atomic<long long> wrongTotal{2000};
+    runTogetherWithin(20, kMovers + 1, [&](int t) {
+        if (t == kMovers) {  // the watcher
+            while (moversLeft.load() > 0) {
+                long long seen = Account::total(x, y);
+                if (seen != 2000) wrongTotal = seen;
+            }
+            return;
+        }
+        for (int i = 0; i < kPerThread; ++i) {
+            if (t % 2 == 0) {
+                x.transfer(y, 7);
+            } else {
+                y.transfer(x, 7);
+            }
+        }
+        moversLeft.fetch_sub(1);
+    });
+
+    EXPECT_EQ(wrongTotal.load(), 2000) << "total() saw money that was in flight";
+    EXPECT_EQ(Account::total(x, y), 2000);
+}
+
+TEST(Account, ConcurrentTransfersAmongManyAccountsKeepTheMoney) {
+    // 8 threads move random amounts between random pairs of 6 accounts,
+    // in both directions. No deadlock, no money made or lost, no account
+    // below zero.
+    constexpr int kAccounts = 6;
+    constexpr int kThreads = 8;
+    constexpr int kPerThread = 20000;
+    std::vector<std::unique_ptr<Account>> accounts;
+    for (int i = 0; i < kAccounts; ++i) accounts.push_back(std::make_unique<Account>(1000));
+    runTogetherWithin(20, kThreads, [&](int t) {
+        std::mt19937 rng(99 + t);
+        for (int i = 0; i < kPerThread; ++i) {
+            int from = static_cast<int>(rng() % kAccounts);
+            int to = static_cast<int>(rng() % (kAccounts - 1));
+            if (to >= from) ++to;  // any account but `from`
+            accounts[from]->transfer(*accounts[to], 1 + static_cast<long long>(rng() % 50));
+        }
+    });
+
+    long long sum = 0;
+    for (const auto& a : accounts) {
+        EXPECT_GE(a->balance(), 0);
+        sum += a->balance();
+    }
+    EXPECT_EQ(sum, 1000LL * kAccounts) << "money appeared or disappeared";
 }

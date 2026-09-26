@@ -7,7 +7,9 @@
 //
 // Two threads can both see nullptr, and both create an instance. This
 // task is the same problem for many keys: a cache where the value for
-// each key is computed at most once.
+// each key is computed at most once. It is also the slides' image cache,
+// done right: each file is read once, and one slow read does not make
+// every other thread wait.
 //
 //   get(key, compute)  if `key` already has a value, return it.
 //                      Otherwise call compute() to make one, remember

@@ -1,5 +1,7 @@
 package day03;
 
+import java.util.OptionalInt;
+
 /**
  * Day 3 -- The bounded stack, shared.
  *
@@ -18,6 +20,18 @@ package day03;
  * returns. With two threads, another thread can arrive in exactly that
  * moment. No thread may ever see or cause a half-done push or pop: no
  * value lost, no value returned twice, no value made up.
+ *
+ * Even with every method locked, a caller who writes
+ *
+ *     if (!s.isEmpty()) { int v = s.top(); s.pop(); ... }
+ *
+ * has an API race: another thread can run between the calls. So the
+ * stack also offers calls that check and act as ONE step:
+ *   - tryPush(v): if there is room, push v and return true. If the stack
+ *     is full, return false and change nothing. Never throws.
+ *   - tryPop(): if the stack is not empty, remove the top value and
+ *     return it. If it is empty, return OptionalInt.empty(). Never
+ *     throws.
  */
 public class BoundedStack {
     // TODO: choose your own representation.
@@ -53,5 +67,15 @@ public class BoundedStack {
     public int top() {
         // TODO
         return 0;
+    }
+
+    public boolean tryPush(int value) {
+        // TODO
+        return false;
+    }
+
+    public OptionalInt tryPop() {
+        // TODO
+        return OptionalInt.empty();
     }
 }

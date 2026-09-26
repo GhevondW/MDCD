@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <atomic>
 #include <chrono>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -142,6 +143,125 @@ TEST(BoundedStack, ConcurrentPushAndPopConserveValues) {
     });
 
     ASSERT_FALSE(pastDeadline()) << "gave up after 20 s -- values were lost";
+    std::vector<int> all;
+    for (const auto& p : popped) all.insert(all.end(), p.begin(), p.end());
+    std::sort(all.begin(), all.end());
+    ASSERT_EQ(all.size(), static_cast<std::size_t>(kTotal));
+    for (int v = 0; v < kTotal; ++v) {
+        ASSERT_EQ(all[v], v) << "a value was popped twice, or lost";
+    }
+    EXPECT_TRUE(s.empty());
+}
+
+// ---- tryPush / tryPop: check and act as one step ----
+
+TEST(BoundedStack, TryPushAndTryPopFollowTheRules) {
+    BoundedStack s(2);
+    EXPECT_EQ(s.tryPop(), std::nullopt) << "empty stack";
+    EXPECT_TRUE(s.tryPush(1));
+    EXPECT_TRUE(s.tryPush(2));
+    EXPECT_FALSE(s.tryPush(3)) << "full stack";
+    EXPECT_EQ(s.size(), 2u);
+    EXPECT_EQ(s.tryPop(), std::optional<int>(2));
+    EXPECT_EQ(s.tryPop(), std::optional<int>(1));
+    EXPECT_EQ(s.tryPop(), std::nullopt);
+    EXPECT_TRUE(s.empty());
+}
+
+TEST(BoundedStack, ConcurrentTryPopTakesEachValueOnce) {
+    // 8 threads empty the stack with tryPop -- the one-call version of
+    // "if (!s.empty()) { v = s.top(); s.pop(); }".
+    constexpr int kValues = 20000;
+    constexpr int kThreads = 8;
+    BoundedStack s(kValues);
+    for (int v = 0; v < kValues; ++v) s.push(v);
+
+    std::vector<std::vector<int>> popped(kThreads);
+    std::atomic<int> poppedCount{0};
+    runTogether(kThreads, [&](int t) {
+        while (poppedCount.load() <= kValues) {  // more than kValues: made up
+            std::optional<int> v = s.tryPop();
+            if (!v) return;
+            popped[t].push_back(*v);
+            poppedCount.fetch_add(1);
+        }
+    });
+
+    std::vector<int> all;
+    for (const auto& p : popped) all.insert(all.end(), p.begin(), p.end());
+    std::sort(all.begin(), all.end());
+    ASSERT_EQ(all.size(), static_cast<std::size_t>(kValues))
+        << "a value was popped twice, or lost";
+    for (int v = 0; v < kValues; ++v) {
+        ASSERT_EQ(all[v], v) << "a value was popped twice, or lost";
+    }
+    EXPECT_TRUE(s.empty());
+}
+
+TEST(BoundedStack, ConcurrentTryPushStopsExactlyAtCapacity) {
+    // Like ConcurrentPushesStopExactlyAtCapacity, with tryPush.
+    constexpr int kThreads = 8;
+    constexpr int kPerThread = 250;
+    for (int round = 0; round < 20; ++round) {
+        BoundedStack s(1000);
+        std::vector<std::vector<int>> pushed(kThreads);
+        runTogether(kThreads, [&](int t) {
+            for (int i = 0; i < kPerThread; ++i) {
+                int v = t * 1000 + i;
+                if (s.tryPush(v)) pushed[t].push_back(v);
+            }
+        });
+
+        std::vector<int> expected;
+        for (const auto& p : pushed) expected.insert(expected.end(), p.begin(), p.end());
+        ASSERT_EQ(expected.size(), 1000u) << "round " << round << ": tryPush calls that returned true";
+        ASSERT_EQ(s.size(), 1000u) << "round " << round;
+
+        std::vector<int> held;
+        for (int i = 0; i < 1000; ++i) {
+            std::optional<int> v = s.tryPop();
+            if (!v) break;
+            held.push_back(*v);
+        }
+        std::sort(expected.begin(), expected.end());
+        std::sort(held.begin(), held.end());
+        ASSERT_EQ(held, expected) << "round " << round << ": the stack lost a value or made one up";
+    }
+}
+
+TEST(BoundedStack, ConcurrentTryPushAndTryPopConserveValues) {
+    // A small stack, 4 pushers and 4 poppers, all using the try- calls.
+    constexpr int kPushers = 4;
+    constexpr int kPerPusher = 5000;
+    constexpr int kTotal = kPushers * kPerPusher;
+    BoundedStack s(16);
+    std::atomic<int> poppedCount{0};
+    std::vector<std::vector<int>> popped(kPushers);
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(10);
+    auto pastDeadline = [&] { return std::chrono::steady_clock::now() > deadline; };
+
+    runTogether(2 * kPushers, [&](int t) {
+        if (t < kPushers) {
+            for (int i = 0; i < kPerPusher && !pastDeadline(); ++i) {
+                while (!s.tryPush(t * kPerPusher + i)) {
+                    if (pastDeadline()) return;
+                    std::this_thread::yield();
+                }
+            }
+        } else {
+            auto& mine = popped[t - kPushers];
+            while (poppedCount.load() < kTotal && !pastDeadline()) {
+                if (std::optional<int> v = s.tryPop()) {
+                    mine.push_back(*v);
+                    poppedCount.fetch_add(1);
+                } else {
+                    std::this_thread::yield();
+                }
+            }
+        }
+    });
+
+    ASSERT_FALSE(pastDeadline()) << "gave up after 10 s -- values were lost";
     std::vector<int> all;
     for (const auto& p : popped) all.insert(all.end(), p.begin(), p.end());
     std::sort(all.begin(), all.end());
