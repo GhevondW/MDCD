@@ -1033,7 +1033,8 @@ struct Welcomer : Subscriber {         // someone else's code
 ## Practice — `playground/<language>/days/day03`
 
 * **Core** — a ticket dispenser (the counter), a bank account
-  (check-then-act), the bounded stack, shared
+  (check-then-act, and transfers that must not deadlock), the bounded
+  stack, shared (with `tryPush` / `tryPop`)
 * **Challenge** — compute once per key (the Singleton), a thread-safe
   event bus (the Observer), the interval booker, shared
 * The same tasks in C++, Python, Java and Go

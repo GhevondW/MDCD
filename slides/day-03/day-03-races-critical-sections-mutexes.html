@@ -8276,7 +8276,8 @@ li:has(&gt; svg.tl) { margin: 0; line-height: 0; }
 <h2 id="practice--playgroundlanguagedaysday03">Practice — <code>playground/&lt;language&gt;/days/day03</code></h2>
 <ul>
 <li data-marpit-fragment="1"><strong>Core</strong> — a ticket dispenser (the counter), a bank account<br />
-(check-then-act), the bounded stack, shared</li>
+(check-then-act, and transfers that must not deadlock), the bounded<br />
+stack, shared (with <code>tryPush</code> / <code>tryPop</code>)</li>
 <li data-marpit-fragment="2"><strong>Challenge</strong> — compute once per key (the Singleton), a thread-safe<br />
 event bus (the Observer), the interval booker, shared</li>
 <li data-marpit-fragment="3">The same tasks in C++, Python, Java and Go</li>
