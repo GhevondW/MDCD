@@ -12,6 +12,7 @@
   <modules>
     <module>days/day02</module>
     <module>days/day03</module>
+    <module>days/day04</module>
   </modules>
 
   <properties>
